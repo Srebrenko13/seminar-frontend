@@ -1,0 +1,5 @@
+.countdown-circle {
+    stroke-dasharray: 754;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear;
+}

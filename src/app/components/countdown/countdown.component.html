@@ -1,0 +1,52 @@
+<div class="min-h-screen w-screen bg-gradient-to-b from-[#1a2030] to-[#252a38] flex flex-col items-center justify-between overflow-hidden">
+
+    <!-- Logo -->
+    <div class="text-center pt-20">
+        <h1 class="text-6xl md:text-7xl font-bold tracking-wider text-[#19E6E8]">
+            UPRO🗲DUEL
+        </h1>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col items-center justify-center">
+
+        <!-- Message -->
+        <h2 class="text-white text-3xl md:text-4xl font-semibold mb-16 text-center px-4">
+            Both players are ready, the<br />game will begin in:
+        </h2>
+
+        <!-- Circular Countdown -->
+        <div class="relative w-64 h-64 mb-12">
+            <!-- Circle border -->
+            <svg class="absolute inset-0 w-full h-full -rotate-90 -scale-y-100">
+                <circle
+                        cx="128"
+                        cy="128"
+                        r="120"
+                        stroke="#19E6E8"
+                        stroke-width="8"
+                        fill="none"
+                        class="countdown-circle"
+                        [style.stroke-dashoffset]="(754 / 5) * (5 - countdown())"
+                />
+            </svg>
+
+            <!-- Number -->
+            <div class="absolute inset-0 flex items-center justify-center">
+                <span class="text-white text-9xl font-bold">{{ countdown() }}</span>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div class="text-[#19E6E8] text-2xl font-semibold">
+            🗲 {{ playersReady }}
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center text-[#7B8189] text-xl font-bold pb-8">
+        Powered by FER | Projekt R
+    </div>
+
+</div>

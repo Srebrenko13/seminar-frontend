@@ -1,0 +1,51 @@
+<div class="min-h-screen w-screen bg-linear-to-b from-[#1a2030] to-[#252a38] flex flex-col items-center overflow-hidden">
+
+    <!-- Logo - positioned at top -->
+    <div class="text-center pt-20 pb-8">
+        <h1 class="text-8xl md:text-9xl font-bold tracking-wider text-[#19E6E8]">
+            UPRO🗲DUEL
+        </h1>
+    </div>
+
+    <div class="w-full max-w-lg px-4 flex-1 flex flex-col justify-center">
+
+        <!-- QR Code Card - no background -->
+        <div class="p-6">
+
+            <!-- QR Code -->
+            <div class="bg-white rounded-2xl p-5 mb-8 flex justify-center">
+                <img [src]="qrCodeUrl" alt="QR Code" class="w-80 h-80" />
+            </div>
+
+            <!-- Instructions -->
+            <div class="text-center mb-8">
+                <h2 class="text-white text-4xl font-semibold mb-4 leading-tight">
+                    Scan the QR code to<br />join the Duel!
+                </h2>
+                <p class="text-white text-xl">
+                    Can't join via QR? Enter game PIN: <span class="text-[#19E6E8] font-mono font-bold text-2xl">{{ gamePin }}</span>
+                </p>
+            </div>
+
+            <!-- Status -->
+            <div class="text-center mb-8">
+                <div class="text-[#19E6E8] text-2xl font-semibold mb-3">
+                    🗲 {{ playersJoined }}/{{ totalPlayers }} players joined
+                </div>
+                @if (isWaitingForPlayers) {
+                    <div class="flex items-center justify-center text-[#7B8189] text-lg">
+                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-[#19E6E8] mr-3"></div>
+                        Waiting for players to join...
+                    </div>
+                }
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center text-[#7B8189] text-xl font-bold pb-8">
+        Powered by FER | Projekt R
+    </div>
+</div>

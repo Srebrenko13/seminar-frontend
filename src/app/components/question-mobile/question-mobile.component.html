@@ -1,0 +1,81 @@
+<div class="min-h-screen w-screen bg-linear-to-b from-[#1a2030] to-[#252a38] flex flex-col items-center justify-between overflow-hidden px-6">
+
+    <!-- TEST BUTTON - Obriši kasnije -->
+    @if (state() === 'waiting') {
+        <button
+                (click)="startAnswering()"
+                class="fixed top-4 right-4 bg-purple-950 text-white px-6 py-3 rounded-lg z-50 font-bold hover:bg-red-700">
+            prijelaz
+        </button>
+    }
+
+    <!-- Logo -->
+    <div class="text-center pt-20">
+        <h1 class="text-5xl md:text-6xl font-bold tracking-wider text-[#19E6E8]">
+            UPRO<span class="text-[#19E6E8]">🗲</span>DUEL
+        </h1>
+    </div>
+
+    <!-- Main Content - CENTERED -->
+    <div class="flex-1 flex flex-col items-center justify-center w-full max-w-md">
+
+        <!-- Waiting State -->
+        @if (state() === 'waiting') {
+            <div class="text-center">
+                <div class="text-[#7B8189] text-4xl font-medium leading-relaxed">
+                    Read the question<br />on the screen
+                </div>
+            </div>
+        }
+
+        <!-- Answering State - BUTTONS CENTERED -->
+        @if (state() === 'answering' || state() === 'locked') {
+            <div class="w-full">
+                <!-- Answer Buttons Grid -->
+                <div class="w-full grid grid-cols-2 gap-4">
+                    @for (answer of answers; track answer.id) {
+                        <button
+                                (click)="onAnswerClick(answer.id)"
+                                [disabled]="state() === 'locked'"
+                                [class]="answer.color + ' text-white font-bold text-xl py-8 rounded-2xl transition-all ' +
+                       (selectedAnswer === answer.id ? 'ring-4 ring-white scale-105' : '') +
+                       (selectedAnswer && selectedAnswer !== answer.id ? 'opacity-50' : '') +
+                       (state() === 'locked' ? ' cursor-not-allowed' : ' cursor-pointer')"
+                        >
+                            <div class="text-3xl mb-2 font-bold">{{ answer.id }}</div>
+                            <div class="text-base font-semibold px-2">{{ answer.text }}</div>
+                        </button>
+                    }
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full mt-8">
+                    <div class="w-full bg-[#3a4050] rounded-full h-2 mb-3">
+                        <div class="bg-[#19E6E8] h-2 rounded-full transition-all duration-300"
+                             [style.width]="(currentQuestion / totalQuestions * 100) + '%'">
+                        </div>
+                    </div>
+                    <div class="text-center text-[#7B8189] text-lg font-semibold">
+                        Question {{ currentQuestion }}/{{ totalQuestions }}
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+
+    <!-- Bottom Section - FIXED POSITION -->
+    <div class="w-full flex flex-col items-center pb-8">
+        <div class="h-10 flex items-center justify-center mb-2">
+            <div class="text-[#19E6E8] text-xl font-semibold">
+                Joined room {{ gamePin }}
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-[#7B8189] text-lg font-bold">
+            Powered by FER | Projekt R
+        </div>
+    </div>
+
+</div>
