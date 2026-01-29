@@ -1,0 +1,8 @@
+/* Additional styles if needed */
+input::placeholder {
+    opacity: 0.5;
+}
+
+input:focus {
+    outline: none;
+}
