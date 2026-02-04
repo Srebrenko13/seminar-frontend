@@ -1,0 +1,13 @@
+/* Avatar circle animation */
+.w-48, .w-56 {
+    transition: transform 0.3s ease;
+}
+
+.w-48:hover, .w-56:hover {
+    transform: scale(1.05);
+}
+
+/* Fallback for missing image */
+img {
+    object-fit: cover;
+}
