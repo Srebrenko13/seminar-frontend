@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
     styleUrls: ['./question-main.component.css']
 })
 export class QuestionMainComponent implements OnDestroy {
-    currentQuestion: number = 7;
+    currentQuestion: number = 7;//treba mijenjat da bude dinamicki
     totalQuestions: number = 10;
 
     // States: 'reading' | 'answering'
@@ -26,14 +26,14 @@ int main(void)
     prinf("broj je neparan")
   }
   return 0;
-}`;
+}`;//code snippet, treba stavit dinamicki isto
 
     answers = [
         { id: 'A', text: 'Broj je paran', color: 'bg-[#19E6E8]' },
-        { id: 'B', text: '8 (na k te nosam)', color: 'bg-[#4169E1]' },
+        { id: 'B', text: '8', color: 'bg-[#4169E1]' },
         { id: 'C', text: 'Broj je paran', color: 'bg-[#FF8C00]' },
         { id: 'D', text: 'Broj je paran', color: 'bg-[#9370DB]' }
-    ];
+    ];//treba dinamicki vidjet answere
 
     // Reading phase timer (5 seconds)
     readingProgress = signal(0);

@@ -20,7 +20,7 @@ export class QuestionMobileComponent {
 
     answers = [
         { id: 'A', text: 'Broj je paran', color: 'bg-[#19E6E8]' },
-        { id: 'B', text: '8 (na k te nosam)', color: 'bg-[#4169E1]' },
+        { id: 'B', text: '8', color: 'bg-[#4169E1]' },
         { id: 'C', text: 'Broj je paran', color: 'bg-[#FF8C00]' },
         { id: 'D', text: 'Broj je paran', color: 'bg-[#9370DB]' }
     ];
