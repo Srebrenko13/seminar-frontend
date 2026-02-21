@@ -1,3 +1,4 @@
+<p-toast position="top-center"></p-toast>
 <div class="min-h-screen w-screen bg-linear-to-b from-[#1a2030] to-[#252a38] flex flex-col items-center overflow-hidden px-6">
 
     <!-- Logo -->
@@ -53,9 +54,13 @@
         <button
                 (click)="onEnterClick()"
                 class="w-full bg-[#1a1f2d] text-white text-2xl font-semibold py-6 rounded-2xl hover:bg-[#20252f] transition-colors"
+                [disabled]="step() == 4"
+                [hidden]="step() == 4"
         >
             Enter
         </button>
+
+
 
     </div>
 

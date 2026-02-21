@@ -1,4 +1,11 @@
+import {Player} from './player.model';
+
 export interface Game {
-    id: number;
+    gameId: number;
     createdAt: string;
+    playerOne: Player;
+    playerTwo: Player;
+    finished: boolean;
+    scoreOne: number;
+    scoreTwo: number;
 }

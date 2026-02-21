@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {Component, input} from '@angular/core';
+import {CommonModule} from '@angular/common';
 
 @Component({
     selector: 'app-game-ended',
@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 })
 export class GameEndedComponent {
     gamePin: string;
+    role = input<'screen' | 'player'>('player');
 
     constructor() {
         this.gamePin = '19172';

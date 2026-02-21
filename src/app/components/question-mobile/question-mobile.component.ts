@@ -1,5 +1,5 @@
-import { Component, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {Component, signal} from '@angular/core';
+import {CommonModule} from '@angular/common';
 
 @Component({
     selector: 'app-question-mobile',
@@ -16,6 +16,9 @@ export class QuestionMobileComponent {
     // States: 'waiting' | 'answering' | 'locked'
     state = signal<'waiting' | 'answering' | 'locked'>('waiting');
 
+    progress = signal(0);
+    intervalId: ReturnType<typeof setInterval> | null = null;
+
     selectedAnswer: string | null = null;
 
     answers = [
@@ -24,6 +27,12 @@ export class QuestionMobileComponent {
         { id: 'C', text: 'Broj je paran', color: 'bg-[#FF8C00]' },
         { id: 'D', text: 'Broj je paran', color: 'bg-[#9370DB]' }
     ];
+
+    ngOnInit() {
+        this.startReadingPhase()
+    }
+
+
 
     onAnswerClick(answerId: string) {
         // Dozvoli promjenu odgovora samo ako nije locked
@@ -41,14 +50,40 @@ export class QuestionMobileComponent {
         }
     }
 
+    // Mock funkcija - lock odgovore kad vrijeme istekne (poziva je backend ili timer)
+    lockAnswers() {
+      this.state.set('locked');
+      console.log(`Final answer: ${this.selectedAnswer || 'No answer selected'}`);
+    }
+
+    startReadingPhase() {
+      const duration = 5000; // 5 seconds
+      const interval = 50; // Update every 50ms
+      let elapsed = 0;
+
+      this.intervalId = setInterval(() => {
+        elapsed += interval;
+        this.progress.set((elapsed / duration) * 100);
+
+        if (elapsed >= duration) {
+          if (this.intervalId) clearInterval(this.intervalId);
+          this.startAnswering();
+        }
+      }, interval);
+    }
+
     // Mock funkcija za testiranje - simulira prijelaz u answering state
     startAnswering() {
         this.state.set('answering');
-    }
+        this.progress.set(10);
 
-    // Mock funkcija - lock odgovore kad vrijeme istekne (poziva je backend ili timer)
-    lockAnswers() {
-        this.state.set('locked');
-        console.log(`Final answer: ${this.selectedAnswer || 'No answer selected'}`);
+        this.intervalId = setInterval(() => {
+          this.progress.update(value => value - 1);
+          if(this.progress() <= 0) {
+            if (this.intervalId) clearInterval(this.intervalId);
+            this.state.set('locked');
+          }
+
+        }, 1000);
     }
 }

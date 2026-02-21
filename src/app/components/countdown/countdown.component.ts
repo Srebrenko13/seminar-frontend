@@ -1,40 +1,49 @@
-import { Component, OnDestroy, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import {Component, inject, input, OnDestroy, signal} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {ActivatedRoute, Router} from '@angular/router';
+import {GamePhase, GameService} from '../../services/game-service';
 
 @Component({
-    selector: 'app-countdown',
-    standalone: true,
-    imports: [CommonModule],
-    templateUrl: './countdown.component.html',
-    styleUrls: ['./countdown.component.css']
+  selector: 'app-countdown',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './countdown.component.html',
+  styleUrls: ['./countdown.component.css']
 })
 export class CountdownComponent implements OnDestroy {
-    countdown = signal(5);
-    playersReady = '2/2 players ready...';
+  countdown = signal(5);
 
-    private intervalId: ReturnType<typeof setInterval> | null = null;
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  public gameService = inject(GameService);
+  info = signal('');
 
-    constructor(private router: Router) {
-        this.startCountdown();
+  role = input<'screen' | 'player'>('player');
+
+  constructor() {
+    this.role = this.route.snapshot.data['role'] ?? 'player';
+
+    if (this.role() === 'screen') {
+      this.info.set('Starting the game!');
+    } else {
+      this.info.set('Waiting for question!');
     }
 
-    ngOnDestroy() {
-        if (this.intervalId) {
-            clearInterval(this.intervalId);
-        }
-    }
+    this.startCountdown();
+  }
 
-    startCountdown() {
-        this.intervalId = setInterval(() => {
-            this.countdown.update(val => val - 1);
+  ngOnDestroy() {}
 
-            if (this.countdown() === 0) {
-                if (this.intervalId) clearInterval(this.intervalId);
-                // TODO: Navigacija na pitanje screen
-                // this.router.navigate(['/question']);
-                console.log('Countdown finished! Navigate to question...');
-            }
-        }, 1000);
-    }
+  startCountdown() {
+    setInterval(() => {
+      this.countdown.update(v => v - 1);
+      if (this.countdown() === 0) {
+        this.router.navigate([
+          this.role() === 'screen'
+            ? this.gameService.updatePhase(GamePhase.QUESTION)
+            : '/question-player'
+        ]);
+      }
+    }, 1000);
+  }
 }

@@ -30,9 +30,9 @@
             <!-- Status -->
             <div class="text-center mb-8">
                 <div class="text-[#19E6E8] text-2xl font-semibold mb-3">
-                    🗲 {{ playersJoined }}/{{ totalPlayers }} players joined
+                    🗲 {{ playersJoined() }}/{{ totalPlayers() }} players joined
                 </div>
-                @if (isWaitingForPlayers) {
+                @if (isWaitingForPlayers()) {
                     <div class="flex items-center justify-center text-[#7B8189] text-lg">
                         <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-[#19E6E8] mr-3"></div>
                         Waiting for players to join...
