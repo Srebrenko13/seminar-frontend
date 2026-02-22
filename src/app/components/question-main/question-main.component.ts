@@ -1,84 +1,126 @@
-import { Component, signal, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {Component, computed, effect, inject, OnDestroy, signal} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {GameService} from '../../services/game-service';
+import {GamePhase, ResultData} from '../../models/game-data.model';
 
 @Component({
-    selector: 'app-question-main',
-    standalone: true,
-    imports: [CommonModule],
-    templateUrl: './question-main.component.html',
-    styleUrls: ['./question-main.component.css']
+  selector: 'app-question-main',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './question-main.component.html',
+  styleUrls: ['./question-main.component.css']
 })
 export class QuestionMainComponent implements OnDestroy {
-    currentQuestion: number = 7;//treba mijenjat da bude dinamicki
-    totalQuestions: number = 10;
+  private gameService = inject(GameService);
 
-    // States: 'reading' | 'answering'
-    state = signal<'reading' | 'answering'>('reading');
+  questionData = this.gameService.currentQuestionData;
+  roundResult = this.gameService.currentResult;
 
-    questionText: string = 'Što će ispisati sljedeći odsječak koda?';
-    codeSnippet: string = `#include <stdio.h>
-int main(void)
-{
-  int x = 10;
-  if (x % 2 == 0) {
-    printf("Broj je paran")
-  } else {
-    prinf("broj je neparan")
-  }
-  return 0;
-}`;//code snippet, treba stavit dinamicki isto
+  correctAnswerId = signal<number | null>(null);
+  showScoreScreen = signal(false);
 
-    answers = [
-        { id: 'A', text: 'Broj je paran', color: 'bg-[#19E6E8]' },
-        { id: 'B', text: '8', color: 'bg-[#4169E1]' },
-        { id: 'C', text: 'Broj je paran', color: 'bg-[#FF8C00]' },
-        { id: 'D', text: 'Broj je paran', color: 'bg-[#9370DB]' }
-    ];//treba dinamicki vidjet answere
+  currentQuestion = computed(() => this.questionData()?.index ?? 0);
+  totalQuestions = 10;
+  questionPrompt = "Što će ispisati sljedeći odsječak koda?";
+  codeSnippet = computed(() => this.questionData()?.question ?? '');
 
-    // Reading phase timer (5 seconds)
-    readingProgress = signal(0);
-    readingIntervalId: ReturnType<typeof setInterval> | null = null;
+  answers = computed(() => {
+    const colors = ['bg-[#19E6E8]', 'bg-[#4169E1]', 'bg-[#FF8C00]', 'bg-[#9370DB]'];
+    const labels = ['A', 'B', 'C', 'D'];
+    const backendAnswers = this.questionData()?.answers ?? [];
 
-    // Answering phase timer (10 seconds countdown)
-    answeringTimer = signal(10);
-    answeringIntervalId: ReturnType<typeof setInterval> | null = null;
+    return backendAnswers.map((ans, i) => ({
+      dbId: ans.answerId,
+      id: labels[i] || '?',
+      text: ans.content,
+      color: colors[i] || 'bg-gray-500'
+    }));
+  });
 
-    constructor() {
+  state = signal<'reading' | 'answering'>('reading');
+  readingProgress = signal(0);
+  answeringTimer = signal(0);
+  totalDuration = computed(() => this.questionData()?.duration ?? 15);
+
+  private readingIntervalId: any;
+  private answeringIntervalId: any;
+
+  constructor() {
+    if (this.questionData()) {
+      this.startReadingPhase();
+    }
+
+    effect(() => {
+      if (this.questionData() && this.state() === 'reading' && !this.readingIntervalId) {
         this.startReadingPhase();
-    }
+      }
+    });
 
-    ngOnDestroy() {
-        if (this.readingIntervalId) clearInterval(this.readingIntervalId);
-        if (this.answeringIntervalId) clearInterval(this.answeringIntervalId);
-    }
+    effect(() => {
+      const result = this.gameService.currentResult();
+      console.log('Effect detected result:', result);
+      if(result) {
+        this.startResultPhase(result);
+      }
+    })
+  }
 
-    startReadingPhase() {
-        const duration = 5000; // 5 seconds
-        const interval = 50; // Update every 50ms
-        let elapsed = 0;
+  ngOnDestroy() {
+    this.clearTimers();
+  }
 
-        this.readingIntervalId = setInterval(() => {
-            elapsed += interval;
-            this.readingProgress.set((elapsed / duration) * 100);
+  private clearTimers() {
+    if (this.readingIntervalId) clearInterval(this.readingIntervalId);
+    if (this.answeringIntervalId) clearInterval(this.answeringIntervalId);
+  }
 
-            if (elapsed >= duration) {
-                if (this.readingIntervalId) clearInterval(this.readingIntervalId);
-                this.startAnsweringPhase();
-            }
-        }, interval);
-    }
+  startReadingPhase() {
+    this.clearTimers();
+    const data = this.questionData();
+    const delay = data?.activationDelay || 5000;
 
-    startAnsweringPhase() {
-        this.state.set('answering');
+    const localActivationTime = Date.now() + delay;
 
-        this.answeringIntervalId = setInterval(() => {
-            this.answeringTimer.update(val => val - 1);
+    this.readingIntervalId = setInterval(() => {
+      const now = Date.now();
+      const remaining = localActivationTime - now;
 
-            if (this.answeringTimer() <= 0) {
-                if (this.answeringIntervalId) clearInterval(this.answeringIntervalId);
-                // TODO: Move to next question
-                console.log('Time is up!');
-            }
-        }, 1000);
-    }
+      const progress = 100 - ((remaining / delay) * 100);
+      this.readingProgress.set(Math.min(100, Math.max(0, progress)));
+
+      if (now >= localActivationTime) {
+        clearInterval(this.readingIntervalId);
+        this.startAnsweringPhase(localActivationTime);
+      }
+    }, 30);
+  }
+
+  startAnsweringPhase(activationTime: number) {
+    this.state.set('answering');
+    const data = this.questionData();
+    if (!data) return;
+
+    const endTime = activationTime + (data.duration * 1000);
+
+    this.answeringIntervalId = setInterval(() => {
+      const now = Date.now();
+      const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
+      this.answeringTimer.set(remaining);
+
+      if (now >= endTime) {
+        clearInterval(this.answeringIntervalId);
+      }
+    }, 100);
+  }
+
+  startResultPhase(result: ResultData) {
+    if (this.answeringIntervalId) clearInterval(this.answeringIntervalId);
+    this.answeringTimer.set(0);
+    this.correctAnswerId.set(result.correctAnswerId);
+
+    setTimeout(() => {
+      this.correctAnswerId.set(null);
+      this.gameService.updatePhase(GamePhase.ROUND_RESULT);
+    }, 3000);
+  }
 }

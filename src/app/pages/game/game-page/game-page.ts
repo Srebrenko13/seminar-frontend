@@ -1,31 +1,31 @@
-import {Component, inject} from '@angular/core';
-import {AsyncPipe} from '@angular/common';
+import {Component, inject, input} from '@angular/core';
 import {GameService} from '../../../services/game-service';
 import {CountdownComponent} from '../../../components/countdown/countdown.component';
-import {ActivatedRoute} from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
 import {QuestionMobileComponent} from '../../../components/question-mobile/question-mobile.component';
 import {QuestionMainComponent} from '../../../components/question-main/question-main.component';
+import {GamePhase} from '../../../models/game-data.model';
+import {ResultComponent} from '../../../components/result-component/result-component/result-component';
 import {GameEndedComponent} from '../../../components/game-end/game-end.component';
 
 @Component({
   selector: 'app-game-page',
   standalone: true,
   imports: [
-    AsyncPipe,
     CountdownComponent,
     QuestionMobileComponent,
     QuestionMainComponent,
+    ResultComponent,
     GameEndedComponent
   ],
   templateUrl: './game-page.html',
   styleUrl: './game-page.css',
 })
 export class GamePage {
-
+  readonly Phase = GamePhase;
+  private router = inject(Router);
   private route = inject(ActivatedRoute);
   public gameService = inject(GameService);
 
-  public role: 'screen' | 'player' = this.route.snapshot.data['role'] ?? 'player';
-
-  public gameState$ = this.gameService.gameState$;
+  role = input.required<'screen' | 'player'>();
 }

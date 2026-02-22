@@ -1,23 +1,20 @@
-<div class="game-layout">
-  @if (gameState$ | async; as phase) {
-
-    @switch (phase) {
-      @case ('COUNTDOWN') {
-        <app-countdown [role]="role"/>
-      }
-      @case ('QUESTION') {
-        @if (role === 'screen') {
-          <app-question-main/>
-        } @else {
-          <app-question-mobile/>
-        }
-      }
-      @case ('RESULTS') {
-        <app-game-ended [role]="role"/>
+<div class="game-container">
+  @switch (gameService.gameState()) {
+    @case (Phase.COUNTDOWN) {
+      <app-countdown [role]="role()"/>
+    }
+    @case (Phase.QUESTION) {
+      @if (role() === 'screen') {
+        <app-question-main/>
+      } @else {
+        <app-question-mobile/>
       }
     }
-
-  } @else {
-    <div class="loading">Synchronizing game state...</div>
+    @case (Phase.ROUND_RESULT) {
+      <app-round-result/>
+    }
+    @case (Phase.GAME_END) {
+      <app-game-ended/>
+    }
   }
 </div>

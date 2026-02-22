@@ -1,15 +1,13 @@
 import {ApplicationConfig, provideBrowserGlobalErrorListeners} from '@angular/core';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { providePrimeNG } from 'primeng/config';
+import {providePrimeNG} from 'primeng/config';
 import Aura from '@primeuix/themes/aura';
-import {provideRouter} from '@angular/router';
+import {provideRouter, withComponentInputBinding} from '@angular/router';
 import {routes} from './app.routes'; // You can also use Lara or Nora
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes),
-    provideAnimationsAsync(),
+    provideRouter(routes, withComponentInputBinding()),
     providePrimeNG({
       theme: {
         preset: Aura,

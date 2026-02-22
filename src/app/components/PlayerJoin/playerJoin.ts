@@ -35,7 +35,6 @@ export class PlayerJoinComponent implements OnDestroy {
 
   ngOnDestroy() {
     this.sub?.unsubscribe();
-    // Do NOT disconnect here if you want to keep connection during the game flow
   }
 
   onEnterPin() {
@@ -61,13 +60,10 @@ export class PlayerJoinComponent implements OnDestroy {
       return;
     }
 
-    // Subscribe once (if not already)
     if (!this.sub) {
       this.sub = this.ws.messages().subscribe((m: ServerMessage) => {
-        // depends on what backend sends; handle both styles
         if (m.type === 'ERROR') {
           this.errorMsg.set(m.payload ?? 'Error');
-          // optionally go back to nickname step
           this.step.set(3);
         }
 
@@ -82,8 +78,6 @@ export class PlayerJoinComponent implements OnDestroy {
         }
 
         if (m.type === 'JOIN_OK') {
-          // player successfully registered on backend
-          // stay on waiting step
           this.messageService.add({
             severity: 'success',
             summary: 'Username Joined',
@@ -102,7 +96,7 @@ export class PlayerJoinComponent implements OnDestroy {
           // Navigate to the next screen
           // this.router.navigate(['/duel/question']); // example
           console.log('Game starting!');
-          this.router.navigate(['/countdown-player']);
+          this.router.navigate(['/game-player']);
         }
       });
     }

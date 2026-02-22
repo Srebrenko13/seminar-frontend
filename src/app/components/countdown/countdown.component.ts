@@ -1,7 +1,8 @@
-import {Component, inject, input, OnDestroy, signal} from '@angular/core';
+import {Component, computed, inject, input, OnDestroy, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {ActivatedRoute, Router} from '@angular/router';
-import {GamePhase, GameService} from '../../services/game-service';
+import {GameService} from '../../services/game-service';
+import {GamePhase} from '../../models/game-data.model';
 
 @Component({
   selector: 'app-countdown',
@@ -11,39 +12,41 @@ import {GamePhase, GameService} from '../../services/game-service';
   styleUrls: ['./countdown.component.css']
 })
 export class CountdownComponent implements OnDestroy {
-  countdown = signal(5);
-
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   public gameService = inject(GameService);
-  info = signal('');
+  private timerId: any;
 
-  role = input<'screen' | 'player'>('player');
+  countdown = signal(5);
+  role = input.required<'screen' | 'player'>();
 
-  constructor() {
-    this.role = this.route.snapshot.data['role'] ?? 'player';
+  info = computed(() => {
+    const currentRole = this.role();
+    console.log('Role received:', currentRole);
+    return currentRole === 'screen'
+      ? 'Starting the game!'
+      : 'Waiting for question!';
+  });
 
-    if (this.role() === 'screen') {
-      this.info.set('Starting the game!');
-    } else {
-      this.info.set('Waiting for question!');
-    }
-
+  ngOnInit() {
     this.startCountdown();
   }
 
-  ngOnDestroy() {}
-
   startCountdown() {
-    setInterval(() => {
+    this.timerId = setInterval(() => {
       this.countdown.update(v => v - 1);
       if (this.countdown() === 0) {
-        this.router.navigate([
-          this.role() === 'screen'
-            ? this.gameService.updatePhase(GamePhase.QUESTION)
-            : '/question-player'
-        ]);
+        this.stopTimer();
+        this.gameService.updatePhase(GamePhase.QUESTION);
       }
     }, 1000);
+  }
+
+  private stopTimer() {
+    if (this.timerId) clearInterval(this.timerId);
+  }
+
+  ngOnDestroy() {
+    this.stopTimer();
   }
 }

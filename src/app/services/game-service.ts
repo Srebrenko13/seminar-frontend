@@ -1,22 +1,44 @@
-import {Injectable} from '@angular/core';
-import {BehaviorSubject} from 'rxjs';
-
-export enum GamePhase {
-  LOBBY = 'LOBBY',
-  COUNTDOWN = 'COUNTDOWN',
-  QUESTION = 'QUESTION',
-  RESULTS = 'RESULTS',
-}
+import {inject, Injectable, signal} from '@angular/core';
+import {GamePhase, QuestionData, ResultData} from '../models/game-data.model';
+import {GameWebSocketService} from './game-websocket.service';
+import {MessageType} from '../models/message.model';
 
 @Injectable({providedIn: 'root'})
 export class GameService {
-  private phaseSubject = new BehaviorSubject<GamePhase>(GamePhase.LOBBY);
-  gameState$ = this.phaseSubject.asObservable();
+  private webSocket = inject(GameWebSocketService);
 
-  private questionDataSubject = new BehaviorSubject<any>(null);
-  questionData$ = this.questionDataSubject.asObservable();
+  gameState = signal<GamePhase>(GamePhase.COUNTDOWN);
+  currentQuestionData = signal<QuestionData | null>(null);
+  currentResult = signal<ResultData | null>(null);
+
+  constructor() {
+    this.webSocket.messages().subscribe((message: any) => {
+      console.log('Incoming WebSocket Message:', message);
+
+      switch (message.type) {
+        case MessageType.QUESTION:
+          this.currentQuestionData.set(message);
+          this.updatePhase(GamePhase.COUNTDOWN);
+          break;
+        case MessageType.ROUND_RESULT:
+          this.currentResult.set(message);
+          break;
+        case MessageType.GAME_END:
+          this.updatePhase(GamePhase.GAME_END);
+          break;
+      }
+    });
+  }
 
   public updatePhase(phase: GamePhase): void {
-    this.phaseSubject.next(phase);
+    this.gameState.set(phase);
+  }
+
+  public getPhase(): GamePhase {
+    return this.gameState();
+  }
+
+  public setQuestionData(data: QuestionData){
+    this.currentQuestionData.set(data);
   }
 }

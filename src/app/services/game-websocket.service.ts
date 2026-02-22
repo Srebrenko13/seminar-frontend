@@ -1,18 +1,18 @@
-import { Injectable } from '@angular/core';
-import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
-import { Observable, Subject } from 'rxjs';
+import {Injectable, signal} from '@angular/core';
+import {webSocket, WebSocketSubject} from 'rxjs/webSocket';
+import {Observable, Subject} from 'rxjs';
+import {MessageType} from '../models/message.model';
 
 export type Role = 'SCREEN' | 'PLAYER';
-export type MessageType = 'CONNECT' | 'LOBBY_STATE' | 'GAME_START' | 'ERROR';
 
 export interface ClientMessage {
   role: Role;
-  messageType: 'CONNECT';   // expand later
-  payload: string | null;   // for PLAYER CONNECT: username; for SCREEN: null
+  messageType: MessageType;
+  payload: string | null;
 }
 
 export interface ServerMessage<T = any> {
-  type: 'SCREEN_OK' | 'JOIN_OK' | 'USERNAME_TAKEN' | 'LOBBY_STATE' | 'GAME_START' | 'ERROR';
+  type: MessageType;
   payload?: T;
 }
 
@@ -23,20 +23,26 @@ export class GameWebSocketService {
 
   /** Change this to your backend host */
   private wsUrl = `ws://localhost:8080/ws`;
+  private role = signal<'SCREEN' | 'PLAYER' | null>(null);
+
+  getRole(){
+    return this.role();
+  }
 
   connectAsScreen(): void {
     this.ensureConnected();
-    const msg: ClientMessage = { role: 'SCREEN', messageType: 'CONNECT', payload: null };
+    const msg: ClientMessage = { role: 'SCREEN', messageType: MessageType.CONNECT, payload: null };
     this.socket!.next(msg);
+    this.role.set('SCREEN');
   }
 
   connectAsPlayer(username: string): void {
     this.ensureConnected();
-    const msg: ClientMessage = { role: 'PLAYER', messageType: 'CONNECT', payload: username };
+    const msg: ClientMessage = { role: 'PLAYER', messageType: MessageType.CONNECT, payload: username };
     this.socket!.next(msg);
+    this.role.set('PLAYER');
   }
 
-  // game-ws.service.ts
   send(data: any): void {
     this.ensureConnected();
     this.socket!.next(data);
@@ -64,7 +70,7 @@ export class GameWebSocketService {
 
     this.socket.subscribe({
       next: (msg) => this.events$.next(msg as ServerMessage),
-      error: (err) => this.events$.next({ type: 'ERROR', payload: 'WebSocket error' + err}),
+      error: (err) => this.events$.next({ type: MessageType.ERROR, payload: 'WebSocket error' + err}),
       complete: () => { /* closed */ }
     });
   }

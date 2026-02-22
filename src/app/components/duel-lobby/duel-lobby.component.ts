@@ -3,6 +3,7 @@ import {CommonModule} from '@angular/common';
 import {filter, Subscription} from 'rxjs';
 import {GameWebSocketService} from '../../services/game-websocket.service';
 import {Router} from '@angular/router';
+import {MessageType} from '../../models/message.model';
 
 @Component({
   selector: 'app-duel-lobby',
@@ -27,11 +28,10 @@ export class DuelLobbyComponent implements OnInit, OnDestroy {
   constructor(private ws: GameWebSocketService) {}
 
   ngOnInit() {
-    // Screen connects once when lobby screen loads
     this.ws.connectAsScreen();
 
     this.sub = this.ws.messages()
-      .pipe(filter(m => m.type === 'LOBBY_STATE' || m.type === 'GAME_START' || m.type === 'ERROR'))
+      .pipe(filter(m => m.type === MessageType.LOBBY_STATE || m.type === 'GAME_START' || m.type === 'ERROR'))
       .subscribe(m => {
         console.log("I'm here");
         console.log(m);
@@ -47,8 +47,7 @@ export class DuelLobbyComponent implements OnInit, OnDestroy {
 
         if (m.type === 'GAME_START') {
           this.isWaitingForPlayers.set(false);
-          // TODO: navigate to next screen (question screen)
-          this.router.navigate(['/countdown-screen']);
+          this.router.navigate(['/game-screen']);
         }
 
         if (m.type === 'ERROR') {
@@ -58,7 +57,6 @@ export class DuelLobbyComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    // IMPORTANT: do NOT disconnect here if you want to keep WS across screens
     this.sub?.unsubscribe();
   }
 }

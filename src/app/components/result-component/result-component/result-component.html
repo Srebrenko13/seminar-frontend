@@ -1,0 +1,61 @@
+<div
+  class="min-h-screen w-screen bg-gradient-to-b from-[#1a2030] to-[#252a38] flex flex-col items-center justify-between overflow-hidden px-16 py-8">
+
+  <div class="text-center">
+    <h1 class="text-6xl font-bold tracking-wider text-[#19E6E8]">
+      UPRO<span class="text-[#19E6E8]">🗲</span>DUEL
+    </h1>
+  </div>
+
+  <div class="flex-1 flex flex-col items-center justify-center w-full max-w-4xl">
+
+    <div class="text-center mb-12 animate-in fade-in duration-700">
+      <h2 class="text-[#7B8189] text-2xl font-bold tracking-[0.2em] uppercase">Current Standings</h2>
+      <div class="h-1 w-24 bg-[#19E6E8] mx-auto mt-2 rounded-full"></div>
+    </div>
+
+    <div class="w-full flex flex-col gap-8">
+      @for (player of this.sortedPlayers(); track player.username; let i = $index) {
+        <div
+          class="flex items-center justify-between bg-[#252a38] p-10 rounded-3xl border-l-[12px] shadow-2xl transform transition-all duration-500 animate-in slide-in-from-right"
+          [class]="player.color"
+          [style.animation-delay.ms]="i * 150"
+          [class.scale-105]="i === 0">
+
+          <div class="flex items-center gap-10">
+            <div class="text-5xl font-black text-[#7B8189] w-16 italic">
+              #{{ i + 1 }}
+            </div>
+
+            <div class="flex flex-col">
+              @if (i === 0) {
+                <span class="text-[#19E6E8] text-sm font-bold tracking-widest uppercase mb-1">Leader</span>
+              }
+              <span class="text-white text-5xl font-black">{{ player.username }}</span>
+            </div>
+          </div>
+
+          <div class="text-right">
+            <div class="text-[#19E6E8] text-6xl font-mono font-bold">
+              {{ player.score | number:'1.2-2' }}
+            </div>
+            <div class="text-[#7B8189] text-sm font-bold uppercase mt-1">Points</div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="mt-16 flex flex-col items-center">
+      <div class="w-64 h-1.5 bg-[#3a4050] rounded-full overflow-hidden">
+        <div class="h-full bg-[#19E6E8] animate-loading-bar"></div>
+      </div>
+      <p class="text-[#7B8189] text-sm font-bold uppercase tracking-widest mt-4 animate-pulse">
+        Preparing next question...
+      </p>
+    </div>
+  </div>
+
+  <div class="text-center text-[#7B8189] text-xl font-bold">
+    Powered by FER | Projekt R
+  </div>
+</div>

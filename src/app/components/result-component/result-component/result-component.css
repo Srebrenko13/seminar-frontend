@@ -1,0 +1,20 @@
+@keyframes loading-bar {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.animate-loading-bar {
+  animation: loading-bar 5000ms linear forwards;
+}
+
+.scale-105 {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 15px rgba(25, 230, 232, 0.15);
+}
+
+.animate-in {
+  animation-fill-mode: both;
+}

@@ -1,89 +1,130 @@
-import {Component, signal} from '@angular/core';
+import {Component, computed, effect, inject, OnDestroy, OnInit, signal} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {GameService} from '../../services/game-service';
+import {GameWebSocketService} from '../../services/game-websocket.service';
+import {MessageType} from '../../models/message.model';
 
 @Component({
-    selector: 'app-question-mobile',
-    standalone: true,
-    imports: [CommonModule],
-    templateUrl: './question-mobile.component.html',
-    styleUrls: ['./question-mobile.component.css']
+  selector: 'app-question-mobile',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './question-mobile.component.html',
+  styleUrls: ['./question-mobile.component.css']
 })
-export class QuestionMobileComponent {
-    gamePin: string = '19172';
-    currentQuestion: number = 1;
-    totalQuestions: number = 10;
+export class QuestionMobileComponent implements OnDestroy, OnInit {
+  private gameService = inject(GameService);
+  private webSocket = inject(GameWebSocketService);
 
-    // States: 'waiting' | 'answering' | 'locked'
-    state = signal<'waiting' | 'answering' | 'locked'>('waiting');
+  questionData = this.gameService.currentQuestionData;
+  roundResult = this.gameService.currentResult;
 
-    progress = signal(0);
-    intervalId: ReturnType<typeof setInterval> | null = null;
+  correctAnswerId = computed(() => this.roundResult()?.correctAnswerId ?? null);
 
-    selectedAnswer: string | null = null;
+  currentQuestion = computed(() => this.questionData()?.index ?? 1);
+  totalQuestions = 10;
 
-    answers = [
-        { id: 'A', text: 'Broj je paran', color: 'bg-[#19E6E8]' },
-        { id: 'B', text: '8', color: 'bg-[#4169E1]' },
-        { id: 'C', text: 'Broj je paran', color: 'bg-[#FF8C00]' },
-        { id: 'D', text: 'Broj je paran', color: 'bg-[#9370DB]' }
-    ];
+  state = signal<'waiting' | 'answering' | 'locked'>('waiting');
+  selectedAnswerId = signal<number | null>(null);
+  readingProgress = signal(0);
 
-    ngOnInit() {
-        this.startReadingPhase()
+  private intervalId: any;
+
+  answers = computed(() => {
+    const colors = ['bg-[#19E6E8]', 'bg-[#4169E1]', 'bg-[#FF8C00]', 'bg-[#9370DB]'];
+    const labels = ['A', 'B', 'C', 'D'];
+    return this.questionData()?.answers.map((ans, i) => ({
+      dbId: ans.answerId,
+      label: labels[i],
+      text: ans.content,
+      color: colors[i]
+    })) ?? [];
+  });
+
+  constructor() {
+    effect(() => {
+      if (this.questionData()) {
+        this.resetForNewQuestion();
+      }
+    });
+  }
+
+  ngOnInit() {
+    if (this.questionData()) {
+      this.startReadingPhase();
     }
+  }
 
+  private resetForNewQuestion() {
+    this.gameService.currentResult.set(null);
 
+    this.state.set('waiting');
+    this.selectedAnswerId.set(null);
+    this.readingProgress.set(0);
+    this.startReadingPhase();
+  }
 
-    onAnswerClick(answerId: string) {
-        // Dozvoli promjenu odgovora samo ako nije locked
-        if (this.state() === 'answering') {
-            // Ako klikne na isti odgovor, deselektiraj ga
-            if (this.selectedAnswer === answerId) {
-                this.selectedAnswer = null;
-            } else {
-                // Inače selectaj novi odgovor
-                this.selectedAnswer = answerId;
-            }
+  startReadingPhase() {
+    this.clearTimers();
+    const data = this.questionData();
+    const delay = data?.activationDelay || 5000;
+    const localActivationTime = Date.now() + delay;
 
-            // TODO: Send answer to backend
-            console.log(`Answer selected: ${this.selectedAnswer}`);
-        }
+    this.intervalId = setInterval(() => {
+      const now = Date.now();
+      const remaining = localActivationTime - now;
+
+      const progress = 100 - ((remaining / delay) * 100);
+      this.readingProgress.set(Math.min(100, Math.max(0, progress)));
+
+      if (now >= localActivationTime) {
+        clearInterval(this.intervalId);
+        this.startAnswering(localActivationTime);
+      }
+    }, 30);
+  }
+
+  startAnswering(activationTime: number) {
+    this.state.set('answering');
+    const data = this.questionData();
+    if (!data) return;
+
+    const endTime = activationTime + (data.duration * 1000);
+
+    this.intervalId = setInterval(() => {
+      const now = Date.now();
+
+      if (now >= endTime) {
+        this.state.set('locked');
+        this.clearTimers();
+      }
+
+      if (this.correctAnswerId() !== null) {
+        this.state.set('locked');
+        this.clearTimers();
+      }
+    }, 100);
+  }
+
+  onAnswerClick(answerId: number) {
+    if (this.state() !== 'answering' || this.selectedAnswerId() !== null) {
+      return;
     }
+    this.selectedAnswerId.set(answerId);
+    this.webSocket.send({
+      messageType: MessageType.ANSWER,
+      role: 'PLAYER',
+      payload: answerId.toString()
+    });
+  }
 
-    // Mock funkcija - lock odgovore kad vrijeme istekne (poziva je backend ili timer)
-    lockAnswers() {
-      this.state.set('locked');
-      console.log(`Final answer: ${this.selectedAnswer || 'No answer selected'}`);
+  private clearTimers() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
     }
+  }
 
-    startReadingPhase() {
-      const duration = 5000; // 5 seconds
-      const interval = 50; // Update every 50ms
-      let elapsed = 0;
-
-      this.intervalId = setInterval(() => {
-        elapsed += interval;
-        this.progress.set((elapsed / duration) * 100);
-
-        if (elapsed >= duration) {
-          if (this.intervalId) clearInterval(this.intervalId);
-          this.startAnswering();
-        }
-      }, interval);
-    }
-
-    // Mock funkcija za testiranje - simulira prijelaz u answering state
-    startAnswering() {
-        this.state.set('answering');
-        this.progress.set(10);
-
-        this.intervalId = setInterval(() => {
-          this.progress.update(value => value - 1);
-          if(this.progress() <= 0) {
-            if (this.intervalId) clearInterval(this.intervalId);
-            this.state.set('locked');
-          }
-
-        }, 1000);
-    }
+  ngOnDestroy() {
+    this.clearTimers();
+  }
 }
